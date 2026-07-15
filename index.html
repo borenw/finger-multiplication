@@ -96,11 +96,22 @@
 
   /* number cards / complements */
   .cards{display:flex;gap:14px;justify-content:center;margin:8px 0 6px}
-  .numcard{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 8px 12px;width:120px;text-align:center;transition:transform .4s}
+  .numcard{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 10px 12px;width:152px;text-align:center;transition:transform .4s}
   .numcard .big{font-size:40px;font-weight:800;line-height:1}
   .numcard .comp{margin-top:8px;font-size:12px;color:var(--muted);opacity:0;transition:opacity .4s .1s}
   .numcard.show .comp{opacity:1}
-  .numcard .comp b{color:var(--green)}
+  .numcard .comp b{color:var(--ink)}
+  .numcard .comp .gaptxt{color:var(--units)}
+  /* ten-frame: 2 rows x 5 cols = 10 cells; fill column-by-column so 8 reads as a 2x4 block */
+  .tenframe{display:grid;grid-template-rows:repeat(2,20px);grid-template-columns:repeat(5,20px);
+    grid-auto-flow:column;gap:5px;justify-content:center;margin:12px auto 2px;padding:7px;
+    border-radius:9px;background:rgba(127,127,127,.10);border:1px solid var(--line)}
+  .tenframe .cell{width:20px;height:20px;border-radius:6px;transform:scale(0);opacity:0;
+    transition:transform .3s,opacity .3s}
+  .numcard.show .tenframe .cell{transform:scale(1);opacity:1}
+  .tenframe .cell.fill{background:var(--tens);border:1px solid var(--tens)}
+  .tenframe .cell.gap{background:var(--units-soft);border:2px dashed var(--units);animation:gapPulse 1.3s ease-in-out infinite}
+  @keyframes gapPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,159,69,0)}50%{box-shadow:0 0 0 5px rgba(255,159,69,.28)}}
 
   /* dot rows for addition (raised) */
   .dotrow{display:flex;gap:8px;justify-content:center;margin:6px 0;min-height:26px;flex-wrap:wrap}
@@ -318,7 +329,7 @@ function buildCornerSteps(a,b,body){
       apply:()=>{ cardA.classList.remove("show"); cardB.classList.remove("show"); zt.classList.remove("on"); zu.classList.remove("on"); showDots(dotsA,false);showDots(dotsB,false); tval.classList.remove("show"); uval.classList.remove("show"); mgrid.classList.remove("show"); setAns("?"); },
       undo:()=>{} },
 
-    { caption:`Make each number <b>10-friendly</b>: <b>${a}</b> needs <b>${fa}</b> more to reach 10, and <b>${b}</b> needs <b>${fb}</b>. Those are the <span class="units-t">folded</span> fingers.`,
+    { caption:`Drop each number into a <b>ten-frame</b> (10 cells). <b>${a}</b> fills a ${a===8?"neat 2×4 block":a+"-cell block"}, leaving <span class="units-t">${fa} empty</span>; <b>${b}</b> leaves <span class="units-t">${fb} empty</span>. Those glowing gaps are the <span class="units-t">folded</span> fingers — what each needs to reach 10.`,
       apply:(instant)=>{ cardA.classList.add("show"); cardB.classList.add("show"); } },
 
     { caption:`Each hand shows <b>5</b> fingers. Raise <b>n − 5</b>: <b>${a}</b> raises <span class="tens-t">${ra}</span>, <b>${b}</b> raises <span class="tens-t">${rb}</span>.`,
@@ -390,7 +401,12 @@ function tipFor(a,b){
 function makeNumCard(n,comp){
   const c=el("div","numcard");
   c.appendChild(el("div","big",String(n)));
-  const cm=el("div","comp"); cm.innerHTML=`needs <b>${comp}</b> to reach 10`;
+  // ten-frame: n filled cells (a neat block, e.g. 8 -> 2x4), comp empty cells that stand out
+  const tf=el("div","tenframe");
+  for(let i=0;i<10;i++){ tf.appendChild(el("div","cell"+(i<n?" fill":" gap"))); }
+  c.appendChild(tf);
+  const cm=el("div","comp");
+  cm.innerHTML=`fills <b>${n}</b> · <b class="gaptxt">${comp}</b> empty → needs <b class="gaptxt">${comp}</b>`;
   c.appendChild(cm);
   return c;
 }
