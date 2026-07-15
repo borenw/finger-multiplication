@@ -99,24 +99,39 @@
   .zone.units h3{color:var(--units)}
   .zone .sub{color:var(--muted);font-size:13px;margin-bottom:12px}
 
-  /* number cards / complements */
-  .cards{display:flex;gap:14px;justify-content:center;margin:8px 0 6px}
-  .numcard{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px 10px 12px;width:152px;text-align:center;transition:transform .4s}
-  .numcard .big{font-size:40px;font-weight:800;line-height:1}
-  .numcard .comp{margin-top:8px;font-size:12px;color:var(--muted);opacity:0;transition:opacity .4s .1s}
-  .numcard.show .comp{opacity:1}
-  .numcard .comp b{color:var(--ink)}
-  .numcard .comp .gaptxt{color:var(--units)}
-  /* ten-frame: 2 rows x 5 cols = 10 cells; fill column-by-column so 8 reads as a 2x4 block */
-  .tenframe{display:grid;grid-template-rows:repeat(2,20px);grid-template-columns:repeat(5,20px);
-    grid-auto-flow:column;gap:5px;justify-content:center;margin:12px auto 2px;padding:7px;
-    border-radius:9px;background:rgba(127,127,127,.10);border:1px solid var(--line)}
-  .tenframe .cell{width:20px;height:20px;border-radius:6px;transform:scale(0);opacity:0;
-    transition:transform .3s,opacity .3s}
-  .numcard.show .tenframe .cell{transform:scale(1);opacity:1}
-  .tenframe .cell.fill{background:var(--tens);border:1px solid var(--tens)}
-  .tenframe .cell.gap{background:var(--units-soft);border:2px dashed var(--units);animation:gapPulse 1.3s ease-in-out infinite}
-  @keyframes gapPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,159,69,0)}50%{box-shadow:0 0 0 5px rgba(255,159,69,.28)}}
+  /* number cards / ten-frames (base 5 + raised + empty-to-10) */
+  .cards{display:flex;gap:14px;justify-content:center;align-items:center;margin:8px 0 6px}
+  .times{font-size:34px;font-weight:800;color:var(--muted);padding:0 2px}
+  .numcard{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;width:auto;text-align:center;transition:transform .4s}
+  .numcard .big{font-size:34px;font-weight:800;line-height:1}
+  .numcard .comp{margin-top:6px;font-size:12px;color:var(--muted)}
+  .raise-t{color:var(--tens);font-weight:700}
+  .gap-t{color:var(--units);font-weight:700}
+  /* ten-frame: top row = raised (blue) then empty (orange); bottom row = base 5 */
+  .tenframe{display:grid;grid-template-columns:repeat(5,20px);grid-template-rows:repeat(2,20px);
+    gap:5px;justify-content:center;margin:10px auto 2px;padding:7px;border-radius:9px;
+    background:rgba(127,127,127,.10);border:1px solid var(--line)}
+  .tenframe.mini{margin:6px auto;transform:scale(.92)}
+  .cell{width:20px;height:20px;border-radius:6px;box-sizing:border-box}
+  .cell.base{background:#6b7688;border:1px solid #6b7688}
+  .cell.raised{background:var(--tens);border:1px solid var(--tens);--g:91,140,255}
+  .cell.empty{background:var(--units-soft);border:2px dashed var(--units);--g:255,159,69}
+  .cell.ghost{background:transparent;border:1px dashed var(--line)}
+  .cell.fillu{background:var(--units);border:1px solid var(--units)}
+  .cell.pulse{animation:cellPulse 1.15s ease-in-out infinite}
+  @keyframes cellPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--g),0)}50%{box-shadow:0 0 0 5px rgba(var(--g),.5)}}
+
+  /* the two result boxes that "fade in grid + number" (sketch steps 2 & 4) */
+  .work{display:flex;gap:18px;justify-content:center;align-items:stretch;flex-wrap:wrap;margin-top:22px}
+  .workbox{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px 16px;min-width:190px;text-align:center;opacity:.22;transform:translateY(10px) scale(.96);transition:opacity .5s,transform .5s}
+  .workbox.show{opacity:1;transform:none}
+  .workbox h4{margin:0 0 4px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .workbox.tensbox{border-color:var(--tens)} .workbox.tensbox h4{color:var(--tens)}
+  .workbox.unitsbox{border-color:var(--units)} .workbox.unitsbox h4{color:var(--units)}
+  .ugrid{display:grid;gap:5px;justify-content:center;margin:10px auto 2px}
+  .bignum{margin-top:8px;font-size:19px;font-weight:800}
+  .bignum.tens-c{color:var(--tens)} .bignum.units-c{color:var(--units)}
+  .copytag{font-size:11px;color:var(--muted);letter-spacing:.04em}
 
   /* dot rows for addition (raised) */
   .dotrow{display:flex;gap:8px;justify-content:center;margin:6px 0;min-height:26px;flex-wrap:wrap}
@@ -153,7 +168,7 @@
 </style>
 </head>
 <body>
-<a class="revbadge" id="revbadge" href="https://github.com/borenw/finger-multiplication/commits/main" target="_blank" rel="noopener" title="View commit history"><span id="revtxt">rev 3 · 2026-07-15</span></a>
+<a class="revbadge" id="revbadge" href="https://github.com/borenw/finger-multiplication/commits/main" target="_blank" rel="noopener" title="View commit history"><span id="revtxt">rev 4 · 2026-07-15</span></a>
 <div class="wrap">
 
   <!-- ===================== GRID VIEW ===================== -->
@@ -296,72 +311,64 @@ function buildCornerSteps(a,b,body){
   const total=a*b;
   const carry = units>=10;
 
-  // layout
+  // layout: two ten-frames (a × b), then two result boxes that fade in
   const cards=el("div","cards");
-  const cardA=makeNumCard(a,fa), cardB=makeNumCard(b,fb);
-  cards.appendChild(cardA); cards.appendChild(cardB);
+  const fA=makeFrame(a), fB=makeFrame(b);
+  cards.appendChild(fA.el); cards.appendChild(el("div","times","×")); cards.appendChild(fB.el);
   body.appendChild(cards);
 
-  const zones=el("div","zones");
-  // TENS zone
-  const zt=el("div","zone tens"); zt.appendChild(el("h3",null,"Tens · add the raised fingers"));
-  zt.appendChild(el("div","sub",`${a} raises ${ra}, ${b} raises ${rb}  (n − 5)`));
-  const rowA=el("div","dotrow"), rowB=el("div","dotrow");
-  const dotsA=addDots(rowA,ra,false), dotsB=addDots(rowB,rb,false);
-  zt.appendChild(rowA); zt.appendChild(rowB);
-  const tval=el("div","bigval tens-t"); tval.innerHTML=`${ra} + ${rb} = ${tens} &nbsp;→&nbsp; ${tens}0`;
-  zt.appendChild(tval);
-  // UNITS zone
-  const zu=el("div","zone units"); zu.appendChild(el("h3",null,"Units · multiply the folded fingers"));
-  zu.appendChild(el("div","sub",`${a} folds ${fa}, ${b} folds ${fb}  (10 − n)`));
-  const arena=el("div","arena");
-  const rowg=el("div","rowgroup"); const rgd=addDots(rowg,fa,true,true);
-  const colg=el("div","colgroup"); const cgd=addDots(colg,fb,true,true);
-  const mgrid=el("div","mgrid"); mgrid.style.gridTemplateColumns=`repeat(${fa},20px)`;
-  for(let i=0;i<fa*fb;i++){ const d=el("div","dot u show"); mgrid.appendChild(d); }
-  arena.appendChild(rowg); arena.appendChild(el("div","",""));
-  arena.appendChild(colg); arena.appendChild(mgrid);
-  zu.appendChild(arena);
-  const uval=el("div","bigval units-t"); uval.innerHTML=`${fa} × ${fb} = ${units}`;
-  zu.appendChild(uval);
+  const work=el("div","work");
+  // TENS box — copy the raised fingers together and add
+  const tb=el("div","workbox tensbox");
+  tb.appendChild(el("h4",null,"copy → add → tens"));
+  const tmini=el("div","tenframe mini");
+  for(let i=0;i<10;i++) tmini.appendChild(el("div","cell "+(i<tens?"raised":"ghost")));
+  tb.appendChild(tmini);
+  const tnum=el("div","bignum tens-c"); tnum.innerHTML=`${ra} + ${rb} = ${tens} → ${tens}0`;
+  tb.appendChild(tnum);
+  // UNITS box — copy the gaps and reshape orthogonal into a grid
+  const ub=el("div","workbox unitsbox");
+  ub.appendChild(el("h4",null,"copy → reshape → units"));
+  const ugrid=el("div","ugrid"); ugrid.style.gridTemplateColumns=`repeat(${fa},20px)`;
+  for(let i=0;i<fa*fb;i++) ugrid.appendChild(el("div","cell fillu"));
+  ub.appendChild(ugrid);
+  const unum=el("div","bignum units-c"); unum.innerHTML=`${fa} × ${fb} = ${units}`;
+  ub.appendChild(unum);
+  work.appendChild(tb); work.appendChild(ub);
+  body.appendChild(work);
 
-  zones.appendChild(zt); zones.appendChild(zu);
-  body.appendChild(zones);
-
-  const showDots=(arr,on)=>arr.forEach((d,i)=>setTimeout(()=>d.classList.toggle("show",on), on?i*90:0));
+  const pulse=(cells,on)=>cells.forEach(c=>c.classList.toggle("pulse",on));
+  const reset=()=>{ pulse(fA.raised,false);pulse(fB.raised,false);pulse(fA.empty,false);pulse(fB.empty,false);
+    tb.classList.remove("show");ub.classList.remove("show");$("#final").classList.remove("show");setAns("?"); };
 
   return [
-    { caption:`We want <b>${a} × ${b}</b>. The finger trick turns a hard product into one easy <span class="tens-t">addition</span> and one easy <span class="units-t">multiplication</span>.`,
-      apply:()=>{ cardA.classList.remove("show"); cardB.classList.remove("show"); zt.classList.remove("on"); zu.classList.remove("on"); showDots(dotsA,false);showDots(dotsB,false); tval.classList.remove("show"); uval.classList.remove("show"); mgrid.classList.remove("show"); setAns("?"); },
-      undo:()=>{} },
+    { caption:`We want <b>${a} × ${b}</b>. Read each hand as a <b>ten-frame</b>: a grey <b>base 5</b>, the <span class="raise-t">raised</span> fingers on top, and the <span class="gap-t">empty</span> cells it still needs to reach 10.`,
+      apply:()=>{ reset(); } },
 
-    { caption:`Drop each number into a <b>ten-frame</b> (10 cells). <b>${a}</b> fills a ${a===8?"neat 2×4 block":a+"-cell block"}, leaving <span class="units-t">${fa} empty</span>; <b>${b}</b> leaves <span class="units-t">${fb} empty</span>. Those glowing gaps are the <span class="units-t">folded</span> fingers — what each needs to reach 10.`,
-      apply:(instant)=>{ cardA.classList.add("show"); cardB.classList.add("show"); } },
+    { caption:`<b>Raised</b> fingers, above the base 5: <b>${a}</b> has <span class="raise-t">${ra}</span>, <b>${b}</b> has <span class="raise-t">${rb}</span>.`,
+      apply:()=>{ reset(); pulse(fA.raised,true); pulse(fB.raised,true); },
+      undo:()=>{ pulse(fA.raised,false); pulse(fB.raised,false); } },
 
-    { caption:`Each hand shows <b>5</b> fingers. Raise <b>n − 5</b>: <b>${a}</b> raises <span class="tens-t">${ra}</span>, <b>${b}</b> raises <span class="tens-t">${rb}</span>.`,
-      apply:(instant)=>{ zt.classList.add("on"); showDots(dotsA,true); showDots(dotsB,true); },
-      undo:()=>{ zt.classList.remove("on"); tval.classList.remove("show"); showDots(dotsA,false); showDots(dotsB,false);} },
+    { caption:`<b>Copy</b> them together and <b>add</b>: <span class="raise-t">${ra} + ${rb} = ${tens}</span>. That is the <span class="raise-t">tens</span> → <b>${tens}0</b>.`,
+      apply:()=>{ pulse(fA.raised,true); pulse(fB.raised,true); pulse(fA.empty,false); pulse(fB.empty,false); tb.classList.add("show"); ub.classList.remove("show"); $("#final").classList.remove("show"); setAns("?"); },
+      undo:()=>{ tb.classList.remove("show"); } },
 
-    { caption:`<span class="tens-t"><b>Add</b></span> the two raised rows: <b>${ra} + ${rb} = ${tens}</b>. That is the <span class="tens-t">tens</span> → <b>${tens}0</b>.`,
-      apply:()=>{ zt.classList.add("on"); showDots(dotsA,true); showDots(dotsB,true); tval.classList.add("show"); },
-      undo:()=>{ tval.classList.remove("show"); } },
+    { caption:`Now the <span class="gap-t">empty</span> cells — what each still needs to reach 10: <b>${a}</b> needs <span class="gap-t">${fa}</span>, <b>${b}</b> needs <span class="gap-t">${fb}</span>.`,
+      apply:()=>{ pulse(fA.raised,false); pulse(fB.raised,false); pulse(fA.empty,true); pulse(fB.empty,true); tb.classList.add("show"); ub.classList.remove("show"); },
+      undo:()=>{ pulse(fA.empty,false); pulse(fB.empty,false); ub.classList.remove("show"); } },
 
-    { caption:`Now the <span class="units-t">folded</span> fingers: <b>${fa}</b> (from ${a}) and <b>${fb}</b> (from ${b}). Keep one as a <b>row</b>, rotate the other to a <b>column</b>.`,
-      apply:()=>{ zu.classList.add("on"); mgrid.classList.remove("show"); rowg.style.transform="none"; colg.style.transform="none"; uval.classList.remove("show"); },
-      undo:()=>{ zu.classList.remove("on"); } },
-
-    { caption:`Sweep them <b>orthogonal</b> to fill a grid — <span class="units-t"><b>${fa} × ${fb} = ${units}</b></span>. That is the <span class="units-t">units</span>.`,
-      apply:()=>{ zu.classList.add("on"); mgrid.classList.add("show"); uval.classList.add("show"); },
-      undo:()=>{ mgrid.classList.remove("show"); uval.classList.remove("show"); } },
+    { caption:`<b>Copy and reshape</b> them <b>orthogonal</b> — one across, one down — sweeping out a grid: <span class="gap-t">${fa} × ${fb} = ${units}</span>. That is the <span class="gap-t">units</span>.`,
+      apply:()=>{ pulse(fA.empty,true); pulse(fB.empty,true); tb.classList.add("show"); ub.classList.add("show"); },
+      undo:()=>{ ub.classList.remove("show"); } },
 
     { caption: carry
-        ? `Combine: <b>${tens}0 + ${units}</b>. Since ${units} ≥ 10, it <b>carries</b> into the tens → <span class="ans">${total}</span>.`
-        : `Combine the two pieces: <b><span class="tens-t">${tens}0</span> + <span class="units-t">${units}</span> = <span class="ans">${total}</span></b>. Done!`,
-      apply:()=>{
+        ? `Stack them: <span class="raise-t">${tens}0</span> + <span class="gap-t">${units}</span>. Since ${units} ≥ 10 it <b>carries</b> → <span class="ans">${total}</span>.`
+        : `Stack the two grids: <span class="raise-t">${tens}0</span> + <span class="gap-t">${units}</span> = <span class="ans">${total}</span>. So <b>${a} × ${b} = ${total}</b>.`,
+      apply:()=>{ pulse(fA.raised,false);pulse(fB.raised,false);pulse(fA.empty,false);pulse(fB.empty,false);
+        tb.classList.add("show"); ub.classList.add("show");
         const f=$("#final"); f.classList.add("show");
-        f.innerHTML = `<span class="t">${tens}0</span> + <span class="u">${units}</span> = <span class="r">${total}</span>` + (carry?` <span class="carry">(${units} carries)</span>`:"");
-        setAns(total);
-      },
+        f.innerHTML=`<span class="t">${tens}0</span> + <span class="u">${units}</span> = <span class="r">${total}</span>`+(carry?` <span class="carry">(${units} carries)</span>`:"");
+        setAns(total); },
       undo:()=>{ $("#final").classList.remove("show"); setAns("?"); } },
   ];
 }
@@ -404,17 +411,23 @@ function tipFor(a,b){
 }
 
 /* small builders */
-function makeNumCard(n,comp){
+// A ten-frame for n (6..9): bottom row = base 5, top row = raised (blue) then empty-to-10 (orange).
+function makeFrame(n){
+  const raised=n-5, empty=10-n;
   const c=el("div","numcard");
   c.appendChild(el("div","big",String(n)));
-  // ten-frame: n filled cells (a neat block, e.g. 8 -> 2x4), comp empty cells that stand out
   const tf=el("div","tenframe");
-  for(let i=0;i<10;i++){ tf.appendChild(el("div","cell"+(i<n?" fill":" gap"))); }
+  const rc=[], ec=[];
+  for(let i=0;i<5;i++){                       // top row
+    if(i<raised){ const cell=el("div","cell raised"); rc.push(cell); tf.appendChild(cell); }
+    else        { const cell=el("div","cell empty");  ec.push(cell); tf.appendChild(cell); }
+  }
+  for(let i=0;i<5;i++) tf.appendChild(el("div","cell base")); // bottom row = base 5
   c.appendChild(tf);
   const cm=el("div","comp");
-  cm.innerHTML=`fills <b>${n}</b> · <b class="gaptxt">${comp}</b> empty → needs <b class="gaptxt">${comp}</b>`;
+  cm.innerHTML=`<span class="raise-t">${raised} raised</span> · <span class="gap-t">needs ${empty}</span>`;
   c.appendChild(cm);
-  return c;
+  return {el:c, raised:rc, empty:ec};
 }
 function addDots(container,count,units,preshow){
   const arr=[];
