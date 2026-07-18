@@ -6,6 +6,16 @@ highlighted green because that's where the **finger / complement trick** shines.
 
 Tap any cell to open a dedicated, animated explanation.
 
+## Illustrated
+
+Two worked examples, drawn by hand. The **touching / folded orange fingers add
+up to the tens**, and the **raised blue fingers form a grid whose area is the
+units** (same arithmetic as below, just grouped the other way round):
+
+![7 × 7 = 49 — four folded orange fingers make 40, and a 3×3 blue grid makes 9](7x7.png)
+
+![7 × 8 = 56 — five folded orange fingers make 50, and a 3×2 blue grid makes 6](7x8.png)
+
 ## The trick (e.g. 7 × 8 = 56)
 
 Each hand has **5** fingers. For a number `n` between 6 and 9:

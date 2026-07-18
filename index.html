@@ -66,6 +66,16 @@
   .sw-plain{background:var(--panel2)}
   .hint{text-align:center;color:var(--muted);margin-top:14px;font-size:14px}
 
+  /* hand-drawn worked examples on the grid view */
+  .examples{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:24px auto 0;max-width:900px}
+  .examples figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:14px 14px 12px;box-shadow:var(--shadow);flex:1 1 320px;max-width:430px}
+  .examples img{width:100%;height:auto;display:block;border-radius:8px}
+  .examples figcaption{color:#55606e;font-size:13px;margin-top:10px;text-align:center;line-height:1.5}
+  .examples figcaption b{color:#141821}
+  .examples .o{color:#c1440e;font-weight:700}
+  .examples .b{color:#1a6fd0;font-weight:700}
+
   /* ---------- TRICK VIEW ---------- */
   .trick{display:none}
   .trick.active{display:block;animation:fade .35s ease}
@@ -186,6 +196,18 @@
       <span>⤢ dashed = squares</span>
     </div>
     <p class="hint">Tap <b>7 × 8</b> to start with the classic example.</p>
+
+    <p class="hint" style="margin-top:26px"><b>The trick, drawn by hand</b> — the folded <span style="color:#c1440e;font-weight:700">orange</span> fingers <i>add</i> to the tens, the raised <span style="color:#1a6fd0;font-weight:700">blue</span> fingers <i>multiply</i> to the units:</p>
+    <div class="examples">
+      <figure>
+        <img src="7x7.png" alt="7 × 7 = 49 on fingers: four folded orange fingers make 40, and a 3×3 blue grid makes 9" loading="lazy" width="1160" height="720">
+        <figcaption><b>7 × 7 = 49.</b> The <span class="o">folded orange fingers</span> add up to the tens — 2 + 2 = <b>4 → 40</b>; the <span class="b">raised blue</span> grid is 3 × 3 = <b>9</b> units.</figcaption>
+      </figure>
+      <figure>
+        <img src="7x8.png" alt="7 × 8 = 56 on fingers: five folded orange fingers make 50, and a 3×2 blue grid makes 6" loading="lazy" width="1120" height="800">
+        <figcaption><b>7 × 8 = 56.</b> The <span class="o">folded orange fingers</span> add up to the tens — 2 + 3 = <b>5 → 50</b>; the <span class="b">raised blue</span> grid is 3 × 2 = <b>6</b> units.</figcaption>
+      </figure>
+    </div>
   </section>
 
   <!-- ===================== TRICK VIEW ===================== -->
