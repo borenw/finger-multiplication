@@ -76,6 +76,15 @@
   .examples .o{color:#c1440e;font-weight:700}
   .examples .b{color:#1a6fd0;font-weight:700}
 
+  /* dynamic hand diagram at the top */
+  #handStage{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+    padding:12px 12px 8px;margin:0 auto 22px;max-width:640px;cursor:pointer;position:relative;
+    transition:filter .12s}
+  #handStage:hover{filter:brightness(1.02)}
+  #handStage svg{width:100%;height:auto;display:block}
+  #handStage .cap{text-align:center;color:#55606e;font-size:12.5px;margin-top:4px}
+  #handStage .cap b{color:#141821}
+
   /* ---------- TRICK VIEW ---------- */
   .trick{display:none}
   .trick.active{display:block;animation:fade .35s ease}
@@ -181,6 +190,12 @@
 <a class="revbadge" id="revbadge" href="https://github.com/borenw/finger-multiplication/commits/main" target="_blank" rel="noopener" title="View commit history"><span id="revtxt">rev 4 · 2026-07-15</span></a>
 <div class="wrap">
 
+  <!-- ===================== DYNAMIC HAND DIAGRAM ===================== -->
+  <div id="handStage" title="Click for the animated walk-through">
+    <svg id="handSvg" viewBox="0 0 560 330" role="img" aria-label="Finger diagram for the selected product"></svg>
+    <div class="cap" id="handCap"></div>
+  </div>
+
   <!-- ===================== GRID VIEW ===================== -->
   <section id="gridView">
     <header class="top">
@@ -244,6 +259,64 @@ const $ = (s,r=document)=>r.querySelector(s);
 const el = (t,cls,txt)=>{const e=document.createElement(t); if(cls)e.className=cls; if(txt!=null)e.textContent=txt; return e;};
 const isCorner = (a,b)=> a>=6 && b>=6;
 
+/* ---------------- dynamic hand diagram (6–9 × 6–9) ---------------- */
+const OR="#c1440e", OR_F="#f6853a", BL="#1a6fd0", BL_F="#eef4ff", GR="#2f8a4f", GY="#55606e", INK="#141821";
+let handAB=[7,8];
+
+// one hand: 5 fingers on a palm; `folded` of them are orange (bent toward centre)
+function handMarkup(ox, folded, foldRight){
+  const fw=18, gp=8, palmTop=252, palmH=44, up=80, down=28;
+  const handW=5*fw+4*gp;
+  let g=`<rect x="${ox-8}" y="${palmTop}" width="${handW+16}" height="${palmH}" rx="16" fill="#fdece0" stroke="#e6b48f" stroke-width="2"/>`;
+  for(let i=0;i<5;i++){
+    const fx=ox+i*(fw+gp);
+    const isFold = foldRight ? (i>=5-folded) : (i<folded);
+    if(isFold){
+      g+=`<rect x="${fx}" y="${palmTop-down}" width="${fw}" height="${down}" rx="${fw/2}" fill="${OR_F}" stroke="${OR}" stroke-width="1.6"/>`;
+      g+=`<circle cx="${fx+fw/2}" cy="${palmTop-down+7}" r="6" fill="${OR}"/>`;
+    }else{
+      g+=`<rect x="${fx}" y="${palmTop-up}" width="${fw}" height="${up}" rx="${fw/2}" fill="${BL_F}" stroke="${BL}" stroke-width="1.6"/>`;
+      g+=`<circle cx="${fx+fw/2}" cy="${palmTop-up+11}" r="6" fill="${BL}"/>`;
+    }
+  }
+  return g;
+}
+
+// blue product lattice: cols×rows dots on a 45°-rotated grid, joined into a diamond
+function latticeMarkup(cx, cy, cols, rows){
+  const s=20, w=(cols-1)*s, h=(rows-1)*s;
+  let lines="", dots="";
+  for(let j=0;j<rows;j++) for(let i=0;i<cols;i++){
+    const x=cx+i*s-w/2, y=cy+j*s-h/2;
+    if(i<cols-1) lines+=`<line x1="${x}" y1="${y}" x2="${cx+(i+1)*s-w/2}" y2="${y}" stroke="${BL}" stroke-width="1.5"/>`;
+    if(j<rows-1) lines+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${cy+(j+1)*s-h/2}" stroke="${BL}" stroke-width="1.5"/>`;
+    dots+=`<circle cx="${x}" cy="${y}" r="7" fill="${BL}"/>`;
+  }
+  return `<g transform="rotate(-45 ${cx} ${cy})">${lines}${dots}</g>`;
+}
+
+function handSvg(a,b){
+  const foldA=a-5, foldB=b-5;      // orange folded per hand  -> tens
+  const upA=10-a, upB=10-b;        // raised blue per hand    -> product = units
+  const tens=foldA+foldB, units=upA*upB, total=a*b;
+  return `
+    <text x="26" y="46" font-size="30" font-weight="800" fill="${INK}">${a} &#215; ${b} = <tspan fill="${GR}">${total}</tspan></text>
+    <text x="26" y="74" font-size="17" font-weight="700"><tspan fill="${OR}">${tens*10}</tspan><tspan fill="${GY}"> + </tspan><tspan fill="${BL}">${units}</tspan><tspan fill="${GY}" font-size="12.5" font-weight="500">   (tens + units)</tspan></text>
+    ${latticeMarkup(280,110,upA,upB)}
+    <text x="280" y="196" text-anchor="middle" font-size="14" font-weight="700" fill="${BL}">units: ${upA} &#215; ${upB} = ${units}</text>
+    ${handMarkup(66,foldA,true)}
+    ${handMarkup(372,foldB,false)}
+    <text x="280" y="322" text-anchor="middle" font-size="14" font-weight="700" fill="${OR}">tens: ${foldA} + ${foldB} = ${tens} &#8594; ${tens}0</text>`;
+}
+
+function renderHand(a,b){
+  if(a<6||b<6||a>9||b>9) return;   // only the corner has the trick
+  handAB=[a,b];
+  document.getElementById("handSvg").innerHTML = handSvg(a,b);
+  document.getElementById("handCap").innerHTML =
+    `<b>${a} &#215; ${b} = ${a*b}.</b> Fold the <span style="color:${OR};font-weight:700">orange</span> fingers &amp; add &#8594; tens; the <span style="color:${BL};font-weight:700">blue</span> grid is their product &#8594; units. Hover a green cell to change &#183; click for the animation.`;
+}
+
 /* ---------------- grid ---------------- */
 function buildGrid(){
   const tbl = $("#gridTable");
@@ -264,6 +337,7 @@ function buildGrid(){
       if(r===c) td.classList.add("diag");
       td.title = r+" × "+c+" = "+(r*c);
       td.addEventListener("click",()=>{ location.hash = "#/t/"+r+"/"+c; });
+      if(isCorner(r,c)) td.addEventListener("mouseenter",()=>renderHand(r,c));
       tr.appendChild(td);
     }
     tbl.appendChild(tr);
@@ -465,6 +539,7 @@ function route(){
   if(m){
     const a=+m[1], b=+m[2];
     if(a>=1&&a<=9&&b>=1&&b<=9){
+      if(isCorner(a,b)) renderHand(a,b);
       $("#gridView").style.display="none";
       $("#trickView").classList.add("active");
       window.scrollTo(0,0);
@@ -480,6 +555,8 @@ function route(){
 
 /* ---------------- wire up ---------------- */
 buildGrid();
+renderHand(7,8);
+$("#handStage").addEventListener("click",()=>{ location.hash="#/t/"+handAB[0]+"/"+handAB[1]; });
 $("#backBtn").addEventListener("click",()=>{ location.hash="#/"; });
 $("#playBtn").addEventListener("click",()=>{ if(playing)pause(); else { if(stepIdx>=steps.length-1)gotoStep(0); play(); } });
 $("#nextBtn").addEventListener("click",()=>{ pause(); next(false); });
