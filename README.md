@@ -1,5 +1,8 @@
 # Finger Multiplication — the 9×9 table with the tough-corner trick
 
+**▶ Live demo: https://borenw.github.io/finger-multiplication/** · listed on
+[borenw.github.io](https://borenw.github.io/) (Engineering Mathematics → Mental Math).
+
 An interactive, single-file web app for learning single-digit multiplication.
 The full 9×9 table is color-coded, and the **hard corner (6–9 × 6–9)** is
 highlighted green because that's where the **finger / complement trick** shines.
